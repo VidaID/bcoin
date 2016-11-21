@@ -9,6 +9,9 @@ var utils = bcoin.utils;
 var assert = require('assert');
 
 var options = bcoin.config({
+  //network: 'testnet',
+  port: 18335,
+  httpPort: 18334,
   config: true,
   arg: true,
   env: true,
