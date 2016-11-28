@@ -81,6 +81,7 @@
     "./lib/net/dns.js": "./lib/net/dns-browser.js",
     "./lib/blockchain/layout.js": "./lib/blockchain/layout-browser.js",
     "./lib/wallet/layout.js": "./lib/wallet/layout-browser.js",
+    "./lib/hd/README.md": "./browser/empty.js",
     "fs": "./browser/empty.js",
     "crypto": "./browser/empty.js",
     "child_process": "./browser/empty.js",
