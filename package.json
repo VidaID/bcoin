@@ -69,7 +69,6 @@
     "./lib/http/rpcclient.js": "./browser/empty.js",
     "./lib/http/server.js": "./browser/empty.js",
     "./lib/http/wallet.js": "./browser/empty.js",
-    "./lib/utils/lazy.js": "./browser/empty.js",
     "./lib/utils/native.js": "./browser/empty.js",
     "./lib/utils/nfkd.js": "./lib/utils/nfkd-browser.js",
     "./lib/utils/nexttick.js": "./lib/utils/nexttick-browser.js",
