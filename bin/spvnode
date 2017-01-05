@@ -14,7 +14,10 @@ var options = bcoin.config({
   env: true,
   logLevel: 'debug',
   logFile: true,
-  db: 'leveldb'
+  db: 'leveldb',
+  network: "vidatestnet",
+  port: 18334,
+  httpPort: 18335
 });
 
 bcoin.set(options);
