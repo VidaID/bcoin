@@ -87,7 +87,7 @@
     "child_process": "./browser/empty.js",
     "crypto": "./browser/empty.js",
     "fs": "./browser/empty.js",
-    "net": "./browser/empty.js",
+    "net": "cordova-chrome-net",
     "os": "./browser/empty.js",
     "secp256k1": "./browser/empty.js"
   },
