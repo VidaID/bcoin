@@ -17,7 +17,8 @@ options = bcoin.config({
   logLevel: 'debug',
   logFile: true,
   db: 'leveldb',
-  network: "vidatestnet",
+  network: (process.argv.indexOf('vidatestnet') !== -1)?"vidatestnet":"testnet",
+  startHeight: null,
   port: 18334,
   httpPort: 18335
 });
