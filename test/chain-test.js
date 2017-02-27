@@ -460,7 +460,7 @@ describe('Chain', function() {
   }));
 
   it('should fail to connect bad MTP', co(function* () {
-    var mtp = yield chain.tip.getMedianTimeAsync();
+    var mtp = yield chain.tip.getMedianTime();
     var attempt = yield miner.createBlock();
     attempt.block.ts = mtp - 1;
     assert.equal(yield addBlock(attempt), 'time-too-old');
@@ -505,7 +505,7 @@ describe('Chain', function() {
     var input = tx.inputs[0];
     input.witness.set(0, new Buffer(33));
     input.witness.compile();
-    assert.equal(yield addBlock(attempt), 'bad-witness-merkle-size');
+    assert.equal(yield addBlock(attempt), 'bad-witness-nonce-size');
   }));
 
   it('should fail to connect bad witness nonce', co(function* () {
