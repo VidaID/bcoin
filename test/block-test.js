@@ -100,17 +100,24 @@ describe('Block', function() {
   this.timeout(10000);
 
   it('should parse partial merkle tree', function() {
+    var tree;
+
+    assert(mblock.verifyPOW());
+    assert(mblock.verifyBody());
     assert(mblock.verify());
-    assert.equal(mblock.matches.length, 2);
+
+    tree = mblock.getTree();
+
+    assert.equal(tree.matches.length, 2);
     assert.equal(mblock.hash('hex'),
       '8cc72c02a958de5a8b35a23bb7e3bced8bf840cc0a4e1c820000000000000000');
     assert.equal(mblock.rhash(),
       '0000000000000000821c4e0acc40f88bedbce3b73ba2358b5ade58a9022cc78c');
     assert.equal(
-      mblock.matches[0].toString('hex'),
+      tree.matches[0].toString('hex'),
       '7393f84cd04ca8931975c66282ebf1847c78d8de6c2578d4f9bae23bc6f30857');
     assert.equal(
-      mblock.matches[1].toString('hex'),
+      tree.matches[1].toString('hex'),
       'ec8c51de3170301430ec56f6703533d9ea5b05c6fa7068954bcb90eed8c2ee5c');
   });
 
@@ -181,7 +188,7 @@ describe('Block', function() {
 
     mblock2 = MerkleBlock.fromBlock(block, filter);
 
-    assert(mblock2.verifyPartial());
+    assert(mblock2.verifyBody());
     assert.deepEqual(mblock2.toRaw(), mblock.toRaw());
   });
 
@@ -189,6 +196,7 @@ describe('Block', function() {
     var view = new CoinView();
     var height = block300025.height;
     var sigops = 0;
+    var reward = 0;
     var i, j, tx, input, coin, flags;
 
     for (i = 1; i < block300025.txs.length; i++) {
@@ -216,20 +224,24 @@ describe('Block', function() {
       assert(!tx.hasWitness());
       sigops += tx.getSigopsCost(view, flags);
       view.addTX(tx, height);
+      reward += tx.getFee(view);
     }
 
+    reward += consensus.getReward(height, 210000);
+
     assert.equal(sigops, 5280);
-    assert.equal(block.getReward(view, height), 2507773345);
-    assert.equal(block.getReward(view, height), block.txs[0].outputs[0].value);
+    assert.equal(reward, 2507773345);
+    assert.equal(reward, block.txs[0].outputs[0].value);
   });
 
   it('should fail with a bad merkle root', function() {
     var block2 = new Block(block);
     var ret = {};
-    block2.hash();
     block2.merkleRoot = encoding.NULL_HASH;
-    block2._validHeaders = null;
-    assert(!block2.verify(ret));
+    block2.refresh();
+    assert(!block2.verifyPOW());
+    assert(!block2.verifyBody(ret));
+    assert(!block2.verify());
     assert.equal(ret.reason, 'bad-txnmrklroot');
     block2.merkleRoot = block.merkleRoot;
     block2.refresh();
@@ -239,9 +251,11 @@ describe('Block', function() {
   it('should fail on merkle block with a bad merkle root', function() {
     var mblock2 = new MerkleBlock(mblock);
     var ret = {};
-    mblock2.hash();
     mblock2.merkleRoot = encoding.NULL_HASH;
-    assert(!mblock2.verify(ret));
+    mblock2.refresh();
+    assert(!mblock2.verifyPOW());
+    assert(!mblock2.verifyBody(ret));
+    assert(!mblock2.verify());
     assert.equal(ret.reason, 'bad-txnmrklroot');
     mblock2.merkleRoot = mblock.merkleRoot;
     mblock2.refresh();
@@ -250,11 +264,11 @@ describe('Block', function() {
 
   it('should fail with a low target', function() {
     var block2 = new Block(block);
-    var ret = {};
-    block2.hash();
     block2.bits = 403014710;
-    assert(!block2.verify(ret));
-    assert.equal(ret.reason, 'high-hash');
+    block2.refresh();
+    assert(!block2.verifyPOW());
+    assert(block2.verifyBody());
+    assert(!block2.verify());
     block2.bits = block.bits;
     block2.refresh();
     assert(block2.verify());
@@ -264,12 +278,15 @@ describe('Block', function() {
     var block2 = new Block(block);
     var ret = {};
     block2.txs.push(block2.txs[block2.txs.length - 1]);
-    assert(!block2.verify(ret));
+    block2.refresh();
+    assert(!block2.verifyBody(ret));
     assert.equal(ret.reason, 'bad-txns-duplicate');
   });
 
   it('should verify with headers', function() {
     var headers = new Headers(block);
+    assert(headers.verifyPOW());
+    assert(headers.verifyBody());
     assert(headers.verify());
   });
 
