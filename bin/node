@@ -4,36 +4,34 @@
 
 process.title = 'bcoin';
 
-var assert = require('assert');
 var bcoin = require('../');
+var plugin = require('../lib/wallet/plugin');
 var co = bcoin.co;
-var options, node;
+var node;
 
-options = bcoin.config({
+node = new bcoin.fullnode({
   config: true,
-  arg: true,
+  argv: true,
   env: true,
-  logLevel: 'debug',
   logFile: true,
+  logConsole: true,
+  logLevel: 'debug',
   db: 'leveldb',
-  listen: true
+  persistent: true,
+  listen: true,
+  loader: require
 });
 
-bcoin.set(options);
-
-node = new bcoin.fullnode(options);
+// Temporary hack
+if (!node.has('walletdb'))
+  node.use(plugin);
 
 node.on('error', function(err) {
   ;
 });
 
-process.on('uncaughtException', function(err) {
-  node.logger.debug(err.stack);
-  node.logger.error(err);
-  process.exit(1);
-});
-
 co.spawn(function *() {
+  yield node.ensure();
   yield node.open();
   yield node.connect();
   node.startSync();

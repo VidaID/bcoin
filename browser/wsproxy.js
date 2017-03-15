@@ -1,12 +1,12 @@
 'use strict';
 
 var net = require('net');
-var dns = require('dns');
+var EventEmitter = require('events').EventEmitter;
 var IOServer = require('socket.io');
 var util = require('../lib/utils/util');
+var crypto = require('../lib/crypto/crypto');
 var IP = require('../lib/utils/ip');
 var BufferWriter = require('../lib/utils/writer');
-var EventEmitter = require('events').EventEmitter;
 
 var NAME_REGEX = /^[a-z0-9\-\.]+?\.(?:be|me|org|com|net|ch|de)$/i;
 
@@ -64,47 +64,6 @@ WSProxy.prototype._handleSocket = function _handleSocket(ws) {
   ws.on('tcp connect', function(port, host, nonce) {
     self._handleConnect(ws, port, host, nonce);
   });
-
-  ws.on('dns resolve', function(name, record, callback) {
-    self._handleResolve(ws, name, record, callback);
-  });
-};
-
-WSProxy.prototype._handleResolve = function _handleResolve(ws, name, record, callback) {
-  if (typeof name !== 'string') {
-    ws.disconnect();
-    return;
-  }
-
-  if (typeof record !== 'string') {
-    ws.disconnect();
-    return;
-  }
-
-  if (typeof callback !== 'function') {
-    ws.disconnect();
-    return;
-  }
-
-  if (record !== 'A' && record !== 'AAAA') {
-    this.log('Client sent a bad record type: %s.', record);
-    ws.disconnect();
-    return;
-  }
-
-  if (!NAME_REGEX.test(name) || name.length > 200) {
-    this.log('Client sent a bad domain: %s.', name);
-    ws.disconnect();
-    return;
-  }
-
-  dns.resolve(name, record, function(err, result) {
-    if (err) {
-      callback({ message: err.message, code: err.code });
-      return;
-    }
-    callback(null, result);
-  });
 };
 
 WSProxy.prototype._handleConnect = function _handleConnect(ws, port, host, nonce) {
@@ -141,7 +100,7 @@ WSProxy.prototype._handleConnect = function _handleConnect(ws, port, host, nonce
     pow.writeString(host, 'ascii');
     pow = pow.render();
 
-    if (util.cmp(util.hash256(pow), this.target) > 0) {
+    if (util.cmp(crypto.hash256(pow), this.target) > 0) {
       this.log('Client did not solve proof of work (%s).', state.host);
       ws.emit('tcp close');
       ws.disconnect();
@@ -213,6 +172,10 @@ WSProxy.prototype._handleConnect = function _handleConnect(ws, port, host, nonce
     });
   });
 
+  socket.on('timeout', function() {
+    ws.emit('tcp timeout');
+  });
+
   socket.on('close', function() {
     self.log('Closing %s (%s).', state.remoteHost, state.host);
     ws.emit('tcp close');
@@ -223,6 +186,26 @@ WSProxy.prototype._handleConnect = function _handleConnect(ws, port, host, nonce
     if (typeof data !== 'string')
       return;
     socket.write(new Buffer(data, 'hex'));
+  });
+
+  ws.on('tcp keep alive', function(enable, delay) {
+    socket.setKeepAlive(enable, delay);
+  });
+
+  ws.on('tcp no delay', function(enable) {
+    socket.setNoDelay(enable);
+  });
+
+  ws.on('tcp set timeout', function(timeout) {
+    socket.setTimeout(timeout);
+  });
+
+  ws.on('tcp pause', function() {
+    socket.pause();
+  });
+
+  ws.on('tcp resume', function() {
+    socket.resume();
   });
 
   ws.on('disconnect', function() {
@@ -242,7 +225,7 @@ WSProxy.prototype.attach = function attach(server) {
 function SocketState(server, socket) {
   this.pow = server.pow;
   this.target = server.target;
-  this.snonce = util.nonce(true);
+  this.snonce = util.nonce();
   this.socket = null;
   this.host = IP.normalize(socket.conn.remoteAddress);
   this.remoteHost = null;

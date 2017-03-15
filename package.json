@@ -1,6 +1,6 @@
 {
   "name": "bcoin",
-  "version": "1.0.0-alpha",
+  "version": "1.0.0-beta.9",
   "description": "Bitcoin bike-shed",
   "license": "MIT",
   "repository": "git://github.com/bcoin-org/bcoin.git",
@@ -26,9 +26,9 @@
     "elliptic": "6.3.2"
   },
   "optionalDependencies": {
-    "bcoin-native": "0.0.12",
+    "bcoin-native": "0.0.14",
     "leveldown": "1.5.0",
-    "secp256k1": "3.2.0",
+    "secp256k1": "3.2.5",
     "socket.io": "1.4.8",
     "socket.io-client": "1.4.8"
   },
@@ -60,7 +60,8 @@
     "browserify": "browserify --im -o browser/bcoin.js lib/bcoin.js && browserify --im -o browser/bcoin-master.js lib/workers/master.js",
     "uglify": "uglifyjs -m -o browser/bcoin.min.js browser/bcoin.js && uglifyjs -m -o browser/bcoin-master.min.js browser/bcoin-master.js",
     "clean": "rm browser/bcoin.js browser/bcoin.min.js browser/bcoin-master.js browser/bcoin-master.min.js",
-    "lint": "jshint lib/ || exit 0"
+    "lint": "jshint lib/ || exit 0",
+    "docs": "jsdoc -c jsdoc.json"
   },
   "browser": {
     "./lib/blockchain/layout.js": "./lib/blockchain/layout-browser.js",
@@ -74,16 +75,21 @@
     "./lib/http/request.js": "./browser/empty.js",
     "./lib/http/rpcclient.js": "./browser/empty.js",
     "./lib/http/server.js": "./browser/empty.js",
+    "./lib/mempool/layout.js": "./lib/mempool/layout-browser.js",
+    "./lib/utils/fs.js": "./browser/empty.js",
     "./lib/http/wallet.js": "./browser/empty.js",
     "./lib/utils/native.js": "./browser/empty.js",
     "./lib/utils/nfkd.js": "./lib/utils/nfkd-browser.js",
     "./lib/utils/nexttick.js": "./lib/utils/nexttick-browser.js",
     "./lib/utils/lazy.js": "./lib/utils/lazy-browser.js",
+    "./lib/wallet/http.js": "./browser/empty.js",
     "./lib/wallet/layout.js": "./lib/wallet/layout-browser.js",
+    "./lib/wallet/server": "./browser/empty.js",
     "bcoin-native": "./browser/empty.js",
     "./lib/hd/README.md": "./browser/empty.js",
     "child_process": "./browser/empty.js",
     "crypto": "./browser/empty.js",
+    "dgram": "./browser/empty.js",
     "fs": "./browser/empty.js",
     "net": "cordova-chrome-net",
     "os": "./browser/empty.js",
